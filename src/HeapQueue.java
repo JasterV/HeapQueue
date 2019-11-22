@@ -7,23 +7,78 @@ public class HeapQueue<V, P extends Comparable<? super P>> implements PriorityQu
     private final ArrayList<TSPair<V, P>> pairs = new ArrayList<>();
     private long nextTimeStamp = 0L;
 
-    /**---PRIORITY QUEUE IMPLEMENTATION---*/
+    /**
+     * ---PRIORITY QUEUE IMPLEMENTATION---
+     */
     @Override
     public void add(V value, P priority) {
-        TSPair<V, P> pair = new TSPair<>(value, priority, nextTimeStamp);
-        pairs.add(pair);
-        onePathSort();
+        TSPair<V, P> child = new TSPair<>(value, priority, nextTimeStamp);
+        pairs.add(child);
+        add(size() - 1);
         nextTimeStamp += 1;
+    }
+
+    public void add(int index) {
+        if (hasParent(index)) {
+            TSPair<V, P> parent = pairs.get(parent(index));
+            TSPair<V, P> child = pairs.get(index);
+            if (child.compareTo(parent) > 0) {
+                Collections.swap(pairs, index, parent(index));
+            }
+            add(parent(index));
+        }
     }
 
     @Override
     public V remove() {
-        V value = element();
-        Collections.swap(pairs, 0, size() - 1);
+        V n = element();
+        Collections.swap(pairs, size() - 1, 0);
         pairs.remove(size() - 1);
-        maxHeapSort();
-        return value;
+        remove(0);
+        return n;
+
     }
+
+    void remove(int head) {
+        int ro = head;
+        int l = left(head);
+        int r = right(head);
+        if (hasLeft(head) && hasRight(head)) {
+            leftAndRight(ro, l, r, head);
+        } else if (hasLeft(head) && !hasRight(head)) {
+            onlyLeft(ro, l, head);
+        }
+    }
+
+    private void leftAndRight(int ro, int l, int r, int head) {
+        TSPair<V, P> root = pairs.get(ro);
+        TSPair<V, P> left = pairs.get(l);
+        TSPair<V, P> right = pairs.get(r);
+
+        if (hasLeft(head) && left.compareTo(root) > 0) {
+            ro = l;
+        }
+        if (hasRight(head) && right.compareTo(left) > 0) {
+            ro = r;
+        }
+        if (ro != head) {
+            Collections.swap(pairs, head, ro);
+            remove(ro);
+        }
+    }
+
+    private void onlyLeft(int ro, int l, int head) {
+        TSPair<V, P> root = pairs.get(ro);
+        TSPair<V, P> left = pairs.get(l);
+        if (hasLeft(head) && left.compareTo(root) > 0) {
+            ro = l;
+        }
+        if (ro != head) {
+            Collections.swap(pairs, head, ro);
+            remove(ro);
+        }
+    }
+
 
     @Override
     public V element() {
@@ -37,48 +92,6 @@ public class HeapQueue<V, P extends Comparable<? super P>> implements PriorityQu
         return pairs.size();
     }
 
-    /**--- SORT ALGORITHM FOR ADD METHOD ---*/
-    private void onePathSort() {
-        int lastPairIndex = size() - 1;
-        onePathSort(lastPairIndex);
-    }
-
-    private void onePathSort(int index) {
-        if (hasParent(index)) {
-            TSPair<V, P> parent = pairs.get(parent(index));
-            TSPair<V, P> child = pairs.get(index);
-            if (child.compareTo(parent) > 0) {
-                Collections.swap(pairs, index, parent(index));
-                onePathSort(parent(index));
-            }
-        }
-    }
-
-    /**--- SORT ALGORITHM FOR REMOVE METHOD ---*/
-    private void maxHeapSort() {
-        int parentIndex = 0;
-        maxHeapSort(parentIndex);
-    }
-
-    private void maxHeapSort(int index) {
-        int left = left(index);
-        int right = right(index);
-        if (hasLeft(index) && hasRight(index)) {
-            int maxPairIndex = (pairs.get(left).compareTo(pairs.get(right)) > 0) ? left : right;
-            checkMaxPair(maxPairIndex, index);
-        } else if (hasLeft(index)) {
-            checkMaxPair(left, index);
-        } else if (hasRight(index)) {
-            checkMaxPair(right, index);
-        }
-    }
-
-    private void checkMaxPair(int child, int parent) {
-        if (pairs.get(child).compareTo(pairs.get(parent)) > 0) {
-            Collections.swap(pairs, child, parent);
-            maxHeapSort(child);
-        }
-    }
 
     boolean hasParent(int index) {
         return index > 0;
