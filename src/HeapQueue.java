@@ -106,10 +106,7 @@ public class HeapQueue<V, P extends Comparable<? super P>> implements PriorityQu
     }
 
     private int parent(int index) {
-        if (index % 2 != 0)
-            return (index + 1) / 2 - 1;
-        else
-            return index / 2 - 1;
+        return (index + 1) / 2 - 1;
     }
 
     private int left(int index) {
