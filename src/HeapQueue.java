@@ -2,29 +2,46 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.NoSuchElementException;
 
+/**
+ * This class represents a queue based on a heap structure.
+ * @param <V> The value we want to store into the heapQueue its type can be anything
+ * @param <P> The value priority whose type has to be comparable
+ */
 public class HeapQueue<V, P extends Comparable<? super P>> implements PriorityQueue<V, P> {
 
     private final ArrayList<TSPair<V, P>> pairs = new ArrayList<>();
     private long nextTimeStamp = 0L;
 
-    /**---PRIORITY QUEUE IMPLEMENTATION---*/
+    /**
+     * Adds a value with his priority into the queue.
+     * @param value The value that TSPair will store
+     * @param priority The value priority
+     */
     @Override
     public void add(V value, P priority) {
         TSPair<V, P> pair = new TSPair<>(value, priority, nextTimeStamp);
         pairs.add(pair);
-        onePathSort();
+        toMaxHeapFromBottom();
         nextTimeStamp += 1;
     }
 
+    /**
+     * Removes the value with the highest priority
+     * @return the value removed.
+     */
     @Override
     public V remove() {
         V value = element();
         Collections.swap(pairs, 0, size() - 1);
         pairs.remove(size() - 1);
-        maxHeapSort();
+        toMaxHeapFromTop();
         return value;
     }
 
+    /**
+     * Returns the value with the highest priority
+     * @return the value with the highest priority
+     */
     @Override
     public V element() {
         if (size() == 0)
@@ -32,35 +49,40 @@ public class HeapQueue<V, P extends Comparable<? super P>> implements PriorityQu
         return pairs.get(0).value;
     }
 
+    /**
+     * Returns the heapQueue size.
+     * @return the heapQueue size
+     */
     @Override
     public int size() {
         return pairs.size();
     }
 
-    /**--- SORT ALGORITHM FOR ADD METHOD ---*/
-    private void onePathSort() {
+
+    /** ------------ AUXILIARY METHODS ------------- */
+
+    private void toMaxHeapFromBottom() {
         int lastPairIndex = size() - 1;
-        onePathSort(lastPairIndex);
+        toMaxHeapFromBottom(lastPairIndex);
     }
 
-    private void onePathSort(int index) {
+    private void toMaxHeapFromBottom(int index) {
         if (hasParent(index)) {
             TSPair<V, P> parent = pairs.get(parent(index));
             TSPair<V, P> child = pairs.get(index);
             if (child.compareTo(parent) > 0) {
                 Collections.swap(pairs, index, parent(index));
-                onePathSort(parent(index));
+                toMaxHeapFromBottom(parent(index));
             }
         }
     }
 
-    /**--- SORT ALGORITHM FOR REMOVE METHOD ---*/
-    private void maxHeapSort() {
+    private void toMaxHeapFromTop() {
         int parentIndex = 0;
-        maxHeapSort(parentIndex);
+        toMaxHeapFromTop(parentIndex);
     }
 
-    private void maxHeapSort(int index) {
+    private void toMaxHeapFromTop(int index) {
         int left = left(index);
         int right = right(index);
         if (hasLeft(index) && hasRight(index)) {
@@ -68,15 +90,13 @@ public class HeapQueue<V, P extends Comparable<? super P>> implements PriorityQu
             checkMaxPair(maxPairIndex, index);
         } else if (hasLeft(index)) {
             checkMaxPair(left, index);
-        } else if (hasRight(index)) {
-            checkMaxPair(right, index);
         }
     }
 
     private void checkMaxPair(int child, int parent) {
         if (pairs.get(child).compareTo(pairs.get(parent)) > 0) {
             Collections.swap(pairs, child, parent);
-            maxHeapSort(child);
+            toMaxHeapFromTop(child);
         }
     }
 
@@ -92,18 +112,18 @@ public class HeapQueue<V, P extends Comparable<? super P>> implements PriorityQu
         return isValid(right(index));
     }
 
-    private int parent(int index) {
+    private static int parent(int index) {
         if (index % 2 != 0)
             return (index + 1) / 2 - 1;
         else
             return index / 2 - 1;
     }
 
-    private int left(int index) {
+    private static int left(int index) {
         return 2 * (index + 1) - 1;
     }
 
-    private int right(int index) {
+    private static int right(int index) {
         return 2 * (index + 1);
     }
 
